@@ -45,6 +45,7 @@
 #pragma mark - INSInfinityScroll
 
 - (void)ins_addInfinityScrollWithHeight:(CGFloat)height handler:(INSInfinityScrollActionHandler)actionHandler;
+- (void)ins_addInfinityScrollWithWidth:(CGFloat)width handler:(INSInfinityScrollActionHandler)actionHandler;
 - (void)ins_removeInfinityScroll;
 
 - (void)ins_setInfinityScrollEnabled:(BOOL)enabled;
