@@ -450,14 +450,14 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
         if (_preserveContentInset) {
             self.frame = CGRectMake(contentWidth + _externalContentInset.right,
                                     0.0f,
-                                    CGRectGetHeight(_scrollView.bounds),
-                                    width);
+                                    width,
+                                    CGRectGetHeight(_scrollView.bounds));
         }
         else {
             self.frame = CGRectMake(contentWidth,
                                     -_externalContentInset.top,
-                                    CGRectGetHeight(_scrollView.bounds),
-                                    width);
+                                    width,
+                                    CGRectGetHeight(_scrollView.bounds));
         }
     } else {
         CGFloat height = CGRectGetHeight(self.bounds);
