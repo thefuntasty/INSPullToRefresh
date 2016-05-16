@@ -58,7 +58,7 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
         if (_enabled) {
             [self resetFrame];
         } else {
-            [self endInfiniteScrollingWithStoppingContentOffset:NO];
+            [self endInfiniteScrollingWithStoppingContentOffset:YES];
         }
 
         if (!self.shouldShowWhenDisabled) {
@@ -233,7 +233,7 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     }
 }
 - (void)endInfiniteScrolling {
-    [self endInfiniteScrollingWithStoppingContentOffset:NO];
+    [self endInfiniteScrollingWithStoppingContentOffset:YES];
 }
 
 - (void)endInfiniteScrollingWithStoppingContentOffset:(BOOL)stopContentOffset {
