@@ -96,6 +96,15 @@ static char INSInfiniteScrollBackgroundViewKey;
     self.ins_infiniteScrollBackgroundView.actionHandler = actionHandler;
 }
 
+- (void)ins_addInfinityScrollWithWidth:(CGFloat)width handler:(INSInfinityScrollActionHandler)actionHandler {
+    [self ins_removeInfinityScrollBackgroundView];
+    
+    INSInfiniteScrollBackgroundView *view = [[INSInfiniteScrollBackgroundView alloc] initWithWidth:width scrollView:self];
+    [self addSubview:view];
+    self.ins_infiniteScrollBackgroundView = view;
+    self.ins_infiniteScrollBackgroundView.actionHandler = actionHandler;
+}
+
 - (void)ins_removeInfinityScrollBackgroundView {
     [self.ins_infiniteScrollBackgroundView removeFromSuperview];
     self.ins_infiniteScrollBackgroundView = nil;
