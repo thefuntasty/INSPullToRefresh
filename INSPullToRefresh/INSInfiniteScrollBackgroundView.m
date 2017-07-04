@@ -92,7 +92,8 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     CGRect frame = CGRectMake(0.0f, 0.0f, 0.0f, height);
     if (self = [super initWithFrame:frame]) {
         _horizontalMode = NO;
-        
+        _atEnd = YES;
+
         _scrollView = scrollView;
         _externalContentInset = scrollView.contentInset;
         [self commonInit];
@@ -101,7 +102,7 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     return self;
 }
 
-- (instancetype)initWithWidth:(CGFloat)width scrollView:(UIScrollView *)scrollView
+- (instancetype)initWithWidth:(CGFloat)width atEnd:(BOOL)atEnd scrollView:(UIScrollView *)scrollView
 {
     NSParameterAssert(width > 0.0f);
     NSParameterAssert(scrollView);
@@ -109,7 +110,8 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     CGRect frame = CGRectMake(0.0f, 0.0f, width, 0.0f);
     if (self = [super initWithFrame:frame]) {
         _horizontalMode = YES;
-        
+        _atEnd = atEnd;
+
         _scrollView = scrollView;
         _externalContentInset = scrollView.contentInset;
         [self commonInit];
@@ -195,8 +197,9 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
         // Disable infinite scroll when scroll view is empty
         // Default UITableView reports height = 1 on empty tables
         BOOL hasActualContent = (self.scrollView.contentSize.width > 1);
-        
-        if([self.scrollView isDragging] && hasActualContent && contentOffset.x > actionOffset) {
+        BOOL hasOffsetToStart = (self.atEnd && contentOffset.x > actionOffset) || (!self.atEnd && contentOffset.x < 0);
+
+        if([self.scrollView isDragging] && hasActualContent && hasOffsetToStart) {
             if(self.state == INSInfiniteScrollBackgroundViewStateNone) {
                 [self startInfiniteScroll];
             }
@@ -288,16 +291,23 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     UIEdgeInsets contentInset = self.scrollView.contentInset;
     
     if (_horizontalMode) {
-        contentInset.right += CGRectGetWidth(self.frame);
-        
+        if (_atEnd) {
+            contentInset.right += CGRectGetWidth(self.frame);
+        } else {
+            contentInset.left += CGRectGetWidth(self.frame);
+        }
+
         // We have to pad scroll view when content height is smaller than view bounds.
         // This will guarantee that view appears at the very bottom of scroll view.
         CGFloat adjustedContentWidth = [self adjustedWidthFromScrollViewContentSize];
         CGFloat extraRightInset = adjustedContentWidth - self.scrollView.contentSize.width;
         
         // Add empty space padding
-        contentInset.right += extraRightInset;
-        
+        if (_atEnd) {
+            contentInset.right += extraRightInset;
+        } else {
+            contentInset.left += extraRightInset;
+        }
         // Save extra inset
         self.infiniteScrollRightContentInset = extraRightInset;
     } else {
@@ -332,12 +342,17 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     UIEdgeInsets contentInset = self.scrollView.contentInset;
     
     if (_horizontalMode) {
-        contentInset.right -= CGRectGetWidth(self.frame);
-        
-        // remove extra inset added to pad infinite scroll
-        contentInset.right -= self.infiniteScrollRightContentInset;
-        
-        
+        if (_atEnd) {
+            contentInset.right -= CGRectGetWidth(self.frame);
+
+            // remove extra inset added to pad infinite scroll
+            contentInset.right -= self.infiniteScrollRightContentInset;
+        } else {
+            contentInset.left -= CGRectGetWidth(self.frame);
+
+            // remove extra inset added to pad infinite scroll
+            contentInset.left -= self.infiniteScrollRightContentInset;
+        }
     } else {
         contentInset.bottom -= CGRectGetHeight(self.frame);
         
@@ -434,7 +449,9 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
     if (!alreadyUpdating) {
         self.updatingScrollViewContentInset = YES;
     }
-    self.scrollView.contentInset = contentInset;
+    if (!UIEdgeInsetsEqualToEdgeInsets(contentInset, self.scrollView.contentInset)) {
+        self.scrollView.contentInset = contentInset;
+    }
     if (!alreadyUpdating) {
         self.updatingScrollViewContentInset = NO;
     }
@@ -448,16 +465,30 @@ static CGFloat const INSInfinityScrollContentInsetAnimationTime = 0.3;
         CGFloat contentWidth = [self adjustedWidthFromScrollViewContentSize];
         
         if (_preserveContentInset) {
-            self.frame = CGRectMake(contentWidth + _externalContentInset.right,
-                                    0.0f,
-                                    width,
-                                    CGRectGetHeight(_scrollView.bounds));
+            if (_atEnd) {
+                self.frame = CGRectMake(contentWidth + _externalContentInset.right,
+                                        0.0f,
+                                        width,
+                                        CGRectGetHeight(_scrollView.bounds));
+            } else {
+                self.frame = CGRectMake(-width - _externalContentInset.left,
+                                        0.0f,
+                                        width,
+                                        CGRectGetHeight(_scrollView.bounds));
+            }
         }
         else {
-            self.frame = CGRectMake(contentWidth,
-                                    -_externalContentInset.top,
-                                    width,
-                                    CGRectGetHeight(_scrollView.bounds));
+            if (_atEnd) {
+                self.frame = CGRectMake(contentWidth,
+                                        -_externalContentInset.top,
+                                        width,
+                                        CGRectGetHeight(_scrollView.bounds));
+            } else {
+                self.frame = CGRectMake(-width,
+                                        -_externalContentInset.top,
+                                        width,
+                                        CGRectGetHeight(_scrollView.bounds));
+            }
         }
     } else {
         CGFloat height = CGRectGetHeight(self.bounds);
